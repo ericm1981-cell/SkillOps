@@ -1,0 +1,210 @@
+/* ═══════════════════════════════════════════════════
+   SKILLS MATRIX GRID
+═══════════════════════════════════════════════════ */
+
+.matrix-container {
+  position: relative;
+  overflow: auto;
+  max-height: calc(100vh - 200px);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--bg-2);
+}
+
+/* Scroll indicators */
+.matrix-container::after {
+  content: '';
+  position: sticky;
+  right: 0;
+  top: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.matrix-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+/* Sticky corner */
+.matrix-table .th-corner {
+  position: sticky;
+  left: 0;
+  top: 0;
+  z-index: 30;
+  background: var(--bg-2);
+  min-width: 160px;
+  width: 160px;
+  padding: var(--sp-3) var(--sp-4);
+  border-right: 1px solid var(--border-2);
+  border-bottom: 1px solid var(--border-2);
+}
+
+/* Sticky header row (positions) */
+.matrix-table th.th-pos {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-2);
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  padding: 0;
+  vertical-align: bottom;
+}
+
+.pos-header-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0 4px;
+  height: 120px;
+  align-items: flex-end;
+}
+
+.pos-header-text {
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 110px;
+  cursor: default;
+}
+
+.pos-header-text.critical { color: var(--accent); }
+
+/* Sticky roster column */
+.matrix-table td.td-roster {
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  background: var(--bg-2);
+  border-right: 1px solid var(--border-2);
+  min-width: 160px;
+  width: 160px;
+  padding: var(--sp-2) var(--sp-4);
+  white-space: nowrap;
+}
+
+.matrix-table tbody tr:hover td.td-roster { background: var(--bg-3); }
+
+.emp-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.emp-role-badge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Skill cells */
+.matrix-table td.td-skill {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  padding: var(--sp-2) var(--sp-1);
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.matrix-table tbody tr:hover td.td-skill { background: var(--bg-3); }
+
+.matrix-table td.td-skill:hover .level-cell {
+  transform: scale(1.2);
+  z-index: 5;
+  position: relative;
+}
+
+/* Row separator every N rows (groups) */
+.matrix-table tbody tr.row-separator td {
+  border-bottom: 2px solid var(--border-2);
+}
+
+/* Filter bar above matrix */
+.matrix-filter-bar {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  margin-bottom: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.matrix-filter-bar input[type="text"] {
+  max-width: 200px;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.matrix-filter-bar select {
+  max-width: 160px;
+  font-size: 11px;
+  padding: 6px 10px;
+}
+
+.matrix-scale-info {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+/* Legend */
+.matrix-legend {
+  display: flex;
+  gap: var(--sp-5);
+  margin-top: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-3);
+}
+
+/* Print CSS for QR */
+@media print {
+  .sidebar, .topbar, .app-shell { display: none !important; }
+  .qr-print-sheet {
+    display: block !important;
+    padding: 40px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .qr-print-sheet .qr-line-name {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .qr-print-sheet .qr-image {
+    margin-bottom: 16px;
+  }
+  .qr-print-sheet .qr-url {
+    font-size: 14px;
+    margin-bottom: 24px;
+    word-break: break-all;
+  }
+  .qr-print-sheet .qr-instructions-en,
+  .qr-print-sheet .qr-instructions-es {
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+}
