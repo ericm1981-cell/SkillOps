@@ -1,0 +1,75 @@
+/* Google Fonts @import removed — it blocks window.load on file://, keeping
+   the boot spinner alive for 30+ seconds. System fonts used as fallback.
+   To use IBM Plex: download woff2 files to libs/fonts/ and add @font-face rules here. */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Core palette */
+  --bg:        #0d0f12;
+  --bg-2:      #13161b;
+  --bg-3:      #1a1e25;
+  --bg-4:      #222730;
+  --border:    #2a2f3a;
+  --border-2:  #353c4a;
+  --text:      #e8eaf0;
+  --text-2:    #9aa0b0;
+  --text-3:    #5a6070;
+  --accent:    #f97316;
+  --accent-dim:#7c3a0f;
+  --accent-glow: rgba(249,115,22,0.15);
+
+  /* Status */
+  --green:     #22c55e;
+  --green-dim: #14532d;
+  --red:       #ef4444;
+  --red-dim:   #7f1d1d;
+  --amber:     #f59e0b;
+  --amber-dim: #78350f;
+  --blue:      #3b82f6;
+  --blue-dim:  #1e3a8a;
+  --purple:    #a855f7;
+  --purple-dim:#581c87;
+
+  /* Skill level colors */
+  --l1: #3b82f6; --l1-dim: rgba(59,130,246,0.15);
+  --l2: #f59e0b; --l2-dim: rgba(245,158,11,0.15);
+  --l3: #22c55e; --l3-dim: rgba(34,197,94,0.15);
+  --l4: #a855f7; --l4-dim: rgba(168,85,247,0.15);
+
+  /* Typography */
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-sans: 'IBM Plex Sans', 'Helvetica Neue', sans-serif;
+
+  /* Spacing */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+
+  /* Radius */
+  --r-sm: 3px; --r: 5px; --r-lg: 8px;
+
+  /* Transitions */
+  --t: 0.15s ease;
+}
+
+html { font-size: 14px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-3); }
+
+/* Selection */
+::selection { background: var(--accent-dim); color: var(--accent); }

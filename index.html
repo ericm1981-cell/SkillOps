@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkillOps</title>
+
+  <!--
+    NO external network calls in <head>.
+    fonts.googleapis.com preconnect tags removed — they block window.load on file://.
+    Google Fonts @import was already removed from tokens.css.
+    System fonts are used as fallback (see tokens.css).
+  -->
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/matrix.css">
+
+  <style>
+    /* ── Critical inline styles — applied before any external CSS loads ── */
+    body { background: #0d0f12; margin: 0; }
+    #app { min-height: 100vh; }
+
+    /* Boot screen */
+    #app-loading {
+      position: fixed; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #0d0f12; flex-direction: column; gap: 20px; z-index: 9999;
+      transition: opacity 0.2s ease;
+    }
+    .boot-logo  { display: flex; align-items: center; gap: 16px; }
+    .boot-mark  {
+      width: 48px; height: 48px; background: #f97316; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: monospace; font-weight: 700; font-size: 18px; color: #000;
+    }
+    .boot-name  {
+      font-family: monospace; font-size: 20px; font-weight: 700;
+      color: #e8eaf0; letter-spacing: .08em; text-transform: uppercase;
+    }
+    .boot-spinner {
+      width: 24px; height: 24px;
+      border: 2px solid #2a2f3a; border-top-color: #f97316;
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Boot console — fixed strip at bottom */
+    #boot-console {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 99998;
+      max-height: 140px; overflow-y: auto;
+      background: #0a0c10; border-top: 1px solid #1e2330;
+      padding: 6px 12px; font-family: monospace; font-size: 10px;
+    }
+    .bc-line      { color: #4ade80; padding: 1px 0; }
+    .bc-warn      { color: #fbbf24; }
+    .bc-error     { color: #f87171; font-weight: bold; }
+
+    /* Details/summary */
+    details > summary { list-style: none; cursor: pointer; }
+    details > summary::-webkit-details-marker { display: none; }
+
+    /* Code */
+    code {
+      font-family: monospace; font-size: 11px;
+      background: var(--bg-3, #1a1d26); padding: 1px 5px;
+      border-radius: 3px; color: var(--accent, #f97316);
+    }
+    .opacity-50 { opacity: .5; pointer-events: none; }
+  </style>
+
+  <!--
+    GLOBAL ERROR HANDLERS — must be the very first script, before any app code.
+    Catches parse errors, runtime errors, and unhandled promise rejections.
+    Writes to #boot-console AND calls Boot.fatal() if Boot is available.
+  -->
+  <script>
+    (function() {
+      function _esc(s) {
+        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      function _toConsole(msg, isError) {
+        var p = document.getElementById('boot-console');
+        if (!p) return;
+        var d = document.createElement('div');
+        d.className = 'bc-line ' + (isError ? 'bc-error' : 'bc-warn');
+        d.textContent = (isError ? '✕ ' : '⚠ ') + msg;
+        p.appendChild(d);
+        p.scrollTop = p.scrollHeight;
+      }
+
+      function _killSpinner() {
+        var loader = document.getElementById('app-loading');
+        if (loader) { loader.style.opacity = '0'; setTimeout(function() { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 250); }
+      }
+
+      window.onerror = function(msg, src, line, col, err) {
+        var full = msg + (src ? ' @ ' + src.split('/').pop() + ':' + line : '');
+        _toConsole(full, true);
+        if (typeof Boot !== 'undefined' && Boot.fatal) {
+          Boot.fatal(msg, err ? err.stack : full);
+        } else {
+          _killSpinner();
+          // Fallback panel if Boot not yet loaded
+          var app = document.getElementById('app');
+          if (app && !app.querySelector('[data-boot-err]')) {
+            app.innerHTML = '<div data-boot-err style="position:fixed;inset:0;background:#0d0f12;' +
+              'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+              'padding:24px;font-family:monospace;z-index:99999">' +
+              '<div style="max-width:640px;width:100%">' +
+              '<div style="color:#ef4444;font-size:13px;font-weight:700;letter-spacing:.08em;margin-bottom:8px">BOOT ERROR</div>' +
+              '<div style="color:#e8eaf0;font-size:14px;margin-bottom:16px">' + _esc(msg) + '</div>' +
+              '<pre style="background:#1a1d26;color:#94a3b8;font-size:10px;padding:12px;border-radius:4px;' +
+              'overflow:auto;max-height:200px;margin-bottom:20px;border:1px solid #2a2f3a">' + _esc(err ? err.stack : full) + '</pre>' +
+              '<div style="display:flex;gap:12px">' +
+              '<button onclick="location.reload()" style="padding:10px 20px;background:#f97316;color:#000;border:none;border-radius:4px;cursor:pointer;font-family:monospace;font-size:12px;font-weight:700">↺ Reload</button>' +
+              '<button onclick="(function(){var r=indexedDB.deleteDatabase(\'SkillsMatrixDB\');r.onsuccess=function(){location.reload()}})()" style="padding:10px 20px;background:#1a1d26;color:#ef4444;border:1px solid #ef4444;border-radius:4px;cursor:pointer;font-family:monospace;font-size:12px;font-weight:700">🗑 Reset &amp; Reload</button>' +
+              '</div></div></div>';
+          }
+        }
+        return false; // don't suppress default browser error reporting
+      };
+
+      window.onunhandledrejection = function(e) {
+        var msg = (e.reason && e.reason.message) ? e.reason.message : String(e.reason);
+        var stack = (e.reason && e.reason.stack) ? e.reason.stack : null;
+        _toConsole('Unhandled promise rejection: ' + msg, true);
+        if (typeof Boot !== 'undefined' && Boot.fatal) {
+          Boot.fatal('Unhandled promise rejection: ' + msg, stack);
+        }
+      };
+
+      // Log every script tag 404 (file:// doesn't fire onerror on missing scripts in all browsers)
+      window.addEventListener('error', function(e) {
+        if (e.target && e.target.tagName === 'SCRIPT') {
+          _toConsole('Failed to load script: ' + (e.target.src || '?'), true);
+        }
+        if (e.target && e.target.tagName === 'LINK') {
+          _toConsole('Failed to load stylesheet: ' + (e.target.href || '?'), false);
+        }
+      }, true /* capture phase — fires before bubble */);
+    })();
+  </script>
+</head>
+<body>
+
+<!-- Boot screen — removed by Boot.done() or Boot.fatal() in app.js -->
+<div id="app-loading">
+  <div class="boot-logo">
+    <div class="boot-mark">SM</div>
+    <div class="boot-name">SkillOps</div>
+  </div>
+  <div class="boot-spinner"></div>
+</div>
+
+<!-- Boot console — fixed strip, auto-hides after successful boot -->
+<div id="boot-console">
+  <div class="bc-line">▸ SkillOps loading…</div>
+</div>
+
+<!-- App root -->
+<div id="app"></div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     JS LOAD ORDER — do not reorder.
+     Each layer depends only on layers above it.
+════════════════════════════════════════════════════════════════ -->
+
+<!-- Layer 1: DB (must load first — everything else depends on it) -->
+<script src="js/db/db.js"></script>
+
+<!-- Layer 2: Domain logic — pure functions, no side effects -->
+<script src="js/domain/skillSM.js"></script>
+<script src="js/domain/rotation.js"></script>
+<script src="js/domain/analysis.js"></script>
+<script src="js/domain/templateMapper.js"></script>
+
+<!-- Layer 3: State + i18n -->
+<script src="js/state/translations.js"></script>
+<script src="js/state/appState.js"></script>
+
+<!-- Layer 4: UI primitives -->
+<script src="js/ui/ui.js"></script>
+
+<!-- Layer 5: Services -->
+<script src="js/services.js"></script>
+
+<!-- Layer 6: Pages -->
+<script src="js/ui/pages.js"></script>
+
+<!-- Layer 7: App bootstrap — defines App + Boot, fires on DOMContentLoaded -->
+<script src="js/app.js"></script>
+
+<!--
+  Optional libs — load AFTER app code so their absence doesn't block anything.
+  If a lib 404s, window.XLSX / window.QRCode stays undefined.
+  App.js / pages.js check for their existence before use.
+-->
+<script src="libs/xlsx.full.min.js" onerror="
+  (function(){ var p=document.getElementById('boot-console');
+    if(p){var d=document.createElement('div');d.className='bc-line bc-warn';
+    d.textContent='⚠ xlsx.full.min.js not found — Import/Export disabled';p.appendChild(d);}
+  })()
+"></script>
+<script src="libs/qrcode.min.js" onerror="
+  (function(){ var p=document.getElementById('boot-console');
+    if(p){var d=document.createElement('div');d.className='bc-line bc-warn';
+    d.textContent='⚠ qrcode.min.js not found — QR display uses text fallback';p.appendChild(d);}
+  })()
+"></script>
+
+<!--
+  DB warning hook — called by db.js when IndexedDB falls back to memory mode.
+  Defined here (after app.js) so Boot object is available.
+-->
+<script>
+  window.__DB_WARN = function(reason) {
+    var p = document.getElementById('boot-console');
+    if (p) {
+      var d = document.createElement('div');
+      d.className = 'bc-line bc-warn';
+      d.textContent = '\u26a0 DB fallback: ' + reason;
+      p.appendChild(d);
+    }
+  };
+</script>
+
+</body>
+</html>
